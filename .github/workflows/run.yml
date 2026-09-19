@@ -1,0 +1,26 @@
+name: compute
+on:
+  workflow_dispatch:
+    inputs:
+      cmd:
+        description: comando a ejecutar
+        required: true
+        default: 'nproc; free -g'
+      timeout_min:
+        description: minutos maximos
+        required: false
+        default: '10'
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - name: entorno
+        run: |
+          echo "== RUNNER =="; nproc; free -g; df -h / | tail -1; uname -a
+          echo "== PYTHON/FFMPEG =="; python3 -V; ffmpeg -version 2>/dev/null | head -1 || true
+      - name: ejecutar
+        run: |
+          set -o pipefail
+          timeout "${{ github.event.inputs.timeout_min }}m" bash -lc "${{ github.event.inputs.cmd }}" 2>&1 | tail -400
